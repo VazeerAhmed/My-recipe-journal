@@ -20,6 +20,36 @@ Chapters: **Breakfast · Lunch · Dinner · Treats**
 - ♥ Save your favourites, print a clean recipe card, light and dark themes.
 - No frameworks, no build step, no install. Plain HTML, CSS and JavaScript.
 
+## Where the recipes live
+
+The journal runs in one of two modes — one line in `config.js` decides which.
+
+| | **File mode** (`source: "local"`) | **Database mode** (`source: "supabase"`) |
+|---|---|---|
+| Recipes | `data/recipes.js`, committed to git | Postgres table |
+| Media | `media/`, committed to git | Supabase Storage |
+| Adding a recipe | edit the file, commit, push | fill in a form at `admin.html` |
+| Good for | getting started, a few photos | real video and voice notes |
+| Setup | none | ~10 minutes, free |
+
+It ships in **file mode** so it works the moment you open it.
+
+**Switch to database mode once you have real media.** Git is the wrong place for video: GitHub
+rejects any file over 100 MB, wants repositories under about 1 GB, and keeps every version of
+every file forever — replace one 40 MB video and the repo carries both copies permanently.
+
+[`docs/database-setup.md`](docs/database-setup.md) walks through it, and compares Supabase against
+Firebase, Cloudinary, Backblaze/R2 and unlisted YouTube. Short version: **Supabase**, because it's
+the only free option that gives you the database *and* the file storage in one place and works
+straight from a static site. For any video longer than a couple of minutes, upload it to YouTube as
+*Unlisted* and paste the link — the site embeds it and it costs no storage.
+
+### The writing desk
+
+In database mode, `admin.html` is where recipes get added: sign in, fill in the form, drop the
+photos, videos and voice notes in, save. No files to edit, nothing to commit. Reading the journal
+needs no login; changing it does.
+
 ## Running it
 
 Just open `index.html` in a browser — that's it.
@@ -36,7 +66,9 @@ To put it online for the family, turn on **GitHub Pages** for this repository
 
 ## Adding a recipe
 
-Everything lives in one file: **`data/recipes.js`**. There's a copy-paste template at
+**In database mode:** open `admin.html` and use the form. That's the whole answer.
+
+**In file mode:** everything lives in one file, **`data/recipes.js`**. There's a copy-paste template at
 the top of that file, and the same guide is in [`docs/adding-a-recipe.md`](docs/adding-a-recipe.md)
 and on the site itself under *How to add a recipe*.
 
@@ -77,14 +109,17 @@ The short version:
 ## Layout
 
 ```
-index.html            the whole site (one page, hash routing)
-assets/css/style.css  the paper-and-ink styling
-assets/js/app.js      rendering, search, filters, media players, lightbox
-data/recipes.js       ← the recipes. This is the file you edit.
-media/images/         photos she sends
-media/videos/         videos you record
-media/audio/          her voice messages
-docs/                 how-to guide
+index.html               the journal (one page, hash routing)
+admin.html               the writing desk — add recipes in database mode
+config.js                ← file mode or database mode. One line.
+assets/css/style.css     the paper-and-ink styling
+assets/js/app.js         rendering, search, filters, media players, lightbox
+assets/js/store.js       the data layer — file mode and Supabase, plain fetch()
+assets/js/admin.js       the recipe form and the uploader
+data/recipes.js          the recipes in file mode
+db/schema.sql            the table, the media bucket and the access rules
+media/images|videos|audio   media in file mode
+docs/                    how-to guides
 ```
 
 ## Note

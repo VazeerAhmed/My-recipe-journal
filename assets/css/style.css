@@ -393,3 +393,95 @@ h2{font-family:var(--serif);font-size:1.5rem;font-weight:600;margin:0 0 .75rem}
   .spread{grid-template-columns:1.1fr .9fr}
   a{text-decoration:none}
 }
+
+/* ============================================================
+   The writing desk (admin.html)
+   ============================================================ */
+
+.admin-who{font-size:.8rem;color:var(--ink-3)}
+
+.admin-actions{display:flex;gap:.6rem;flex-wrap:wrap;margin:1.5rem 0}
+
+.signin{max-width:26rem}
+.signin .btn{margin-top:.5rem}
+
+.field{display:flex;flex-direction:column;gap:.35rem;margin-bottom:1rem}
+.field > span,.field legend{
+  font-size:.72rem;letter-spacing:.16em;text-transform:uppercase;color:var(--ink-3);
+}
+.field small{text-transform:none;letter-spacing:0;font-size:.78rem;color:var(--ink-3)}
+.field input,.field select,.field textarea{
+  font:inherit;font-size:.92rem;color:var(--ink);
+  background:var(--paper);border:1px solid var(--rule);border-radius:8px;
+  padding:.55rem .7rem;width:100%;
+}
+.field textarea{resize:vertical;line-height:1.55}
+.field input:focus,.field select:focus,.field textarea:focus{outline:2px solid var(--accent);outline-offset:1px}
+.field input[readonly]{color:var(--ink-3);background:var(--paper-3)}
+
+.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:0 1.25rem}
+.form-grid .wide{grid-column:1 / -1}
+
+.dual{display:flex;align-items:center;gap:.5rem}
+.dual input{width:5rem}
+.dual small{color:var(--ink-3);font-size:.78rem}
+
+.diet-set{border:1px solid var(--rule);border-radius:8px;padding:.75rem 1rem;margin-bottom:1rem}
+.diet-set legend{padding:0 .4rem}
+.cb{display:inline-flex;align-items:center;gap:.4rem;margin-right:1.25rem;font-size:.88rem;color:var(--ink-2)}
+.cb input{width:auto}
+
+.hint{font-size:.83rem;color:var(--ink-3);margin:.25rem 0 .75rem}
+.hint.bad{color:var(--accent)}
+
+.media-editor{margin-bottom:2rem}
+.uploader{display:flex;gap:.6rem;flex-wrap:wrap;align-items:center;margin-bottom:.75rem}
+.uploader input[type="file"]{font-size:.85rem;color:var(--ink-2)}
+.uploader input[type="url"]{
+  flex:1;min-width:220px;font:inherit;font-size:.85rem;color:var(--ink);
+  background:var(--paper);border:1px solid var(--rule);border-radius:999px;padding:.45rem .9rem;
+}
+
+.progress{height:4px;background:var(--paper-3);border-radius:999px;overflow:hidden;margin-bottom:.75rem}
+.progress div{height:100%;width:0;background:var(--accent);transition:width .15s linear}
+
+.media-rows{list-style:none;margin:0;padding:0;display:grid;gap:.5rem}
+.media-rows li{
+  display:flex;gap:.6rem;align-items:center;flex-wrap:wrap;
+  border:1px solid var(--rule);border-radius:8px;padding:.5rem .7rem;background:var(--paper);
+}
+.media-rows .src{
+  font-size:.8rem;color:var(--ink-3);max-width:16rem;overflow:hidden;
+  text-overflow:ellipsis;white-space:nowrap;flex:none;
+}
+.media-rows input[type="text"]{
+  flex:1;min-width:180px;font:inherit;font-size:.85rem;color:var(--ink);
+  background:var(--paper-2);border:1px solid var(--rule);border-radius:6px;padding:.35rem .6rem;
+}
+
+.btn.danger{border-color:#c0563f;color:#c0563f}
+.btn.danger:hover{background:#c0563f;color:#fff}
+.btn.small{padding:.3rem .7rem;font-size:.78rem}
+
+.admin-table{width:100%;border-collapse:collapse;font-size:.9rem}
+.admin-table th{
+  text-align:left;font-size:.7rem;letter-spacing:.16em;text-transform:uppercase;
+  color:var(--ink-3);font-weight:600;padding:.5rem .6rem;border-bottom:1px solid var(--rule);
+}
+.admin-table td{padding:.7rem .6rem;border-bottom:1px solid var(--rule-soft);vertical-align:top}
+.admin-table td small{color:var(--ink-3);font-size:.78rem}
+.admin-table .right{text-align:right;white-space:nowrap}
+
+.toast{
+  position:fixed;left:50%;bottom:1.5rem;transform:translateX(-50%);
+  background:var(--ink);color:var(--paper);padding:.7rem 1.2rem;border-radius:999px;
+  font-size:.88rem;z-index:70;box-shadow:var(--shadow);max-width:min(90vw,34rem);
+  transition:opacity .5s ease;
+}
+.toast.bad{background:#a8402c;color:#fff}
+.toast.go{opacity:0}
+
+@media (max-width:700px){
+  .form-grid{grid-template-columns:1fr}
+  .media-rows .src{max-width:100%}
+}

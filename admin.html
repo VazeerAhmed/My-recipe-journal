@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Add a recipe — Mom's Recipe Journal</title>
+<meta name="robots" content="noindex" />
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>&#9999;</text></svg>" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600&family=Caveat:wght@600&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="assets/css/style.css" />
+</head>
+<body>
+
+<header class="site-header">
+  <div class="wrap header-inner">
+    <a class="brand" href="index.html">
+      <span class="brand-mark">✻</span>
+      <span class="brand-text">
+        <span class="brand-title">Mom&rsquo;s Recipe Journal</span>
+        <span class="brand-sub">the writing desk</span>
+      </span>
+    </a>
+    <nav class="site-nav" aria-label="Sections">
+      <a href="index.html">← Back to the journal</a>
+    </nav>
+    <div class="header-tools">
+      <span id="who" class="admin-who"></span>
+      <button id="signout" class="btn" type="button" hidden>Sign out</button>
+    </div>
+  </div>
+</header>
+
+<main id="admin" class="wrap" tabindex="-1"></main>
+
+<footer class="site-footer">
+  <div class="wrap"><p>Setup guide: <code>docs/database-setup.md</code></p></div>
+</footer>
+
+<script src="config.js"></script>
+<script src="data/recipes.js"></script>
+<script src="assets/js/store.js"></script>
+<script src="assets/js/admin.js"></script>
+</body>
+</html>

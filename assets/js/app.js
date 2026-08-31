@@ -5,7 +5,8 @@
 (function () {
   "use strict";
 
-  var RECIPES = (window.RECIPES || []).slice();
+  var RECIPES = [];
+  var loaded = false;
 
   var CATEGORIES = [
     { id: "breakfast", name: "Breakfast", emoji: "🌅", blurb: "Mornings at Mom's table" },
@@ -85,10 +86,17 @@
     return (r.media && Array.isArray(r.media[kind])) ? r.media[kind] : [];
   }
 
+  // Turns a stored src into something the browser can load: a full URL is
+  // left alone, a repo path stays relative, a bucket path becomes a
+  // Supabase public URL.
+  function url(src) {
+    return window.MRJStore ? window.MRJStore.mediaUrl(src) : src;
+  }
+
   function coverImage(r) {
-    if (r.cover) return r.cover;
+    if (r.cover) return url(r.cover);
     var imgs = media(r, "images");
-    return imgs.length ? (imgs[0].src || imgs[0]) : null;
+    return imgs.length ? url(imgs[0].src || imgs[0]) : null;
   }
 
   function difficultyWord(n) {
@@ -357,11 +365,11 @@
       '<div class="media-head"><h3>🎬 Cooking with Mom</h3><span class="n">' + vids.length + "</span></div>";
     if (vids.length) {
       html += '<div class="video-grid">' + vids.map(function (v) {
-        var src = v.src || v;
+        var src = url(v.src || v);
         var yt = youtubeEmbed(src);
         var player = yt
           ? '<iframe src="' + esc(yt) + '" title="' + esc(v.caption || r.title) + '" loading="lazy" allowfullscreen frameborder="0"></iframe>'
-          : '<video controls preload="metadata"' + (v.poster ? ' poster="' + esc(v.poster) + '"' : "") + '><source src="' + esc(src) + '">Your browser cannot play this video.</video>';
+          : '<video controls preload="metadata"' + (v.poster ? ' poster="' + esc(url(v.poster)) + '"' : "") + '><source src="' + esc(src) + '">Your browser cannot play this video.</video>';
         return "<figure class=\"video-item\">" + player +
           (v.caption ? "<figcaption>" + esc(v.caption) + "</figcaption>" : "") + "</figure>";
       }).join("") + "</div>";
@@ -374,7 +382,7 @@
       '<div class="media-head"><h3>🎙 Her voice notes</h3><span class="n">' + auds.length + "</span></div>";
     if (auds.length) {
       html += '<div class="audio-list">' + auds.map(function (a) {
-        var src = a.src || a;
+        var src = url(a.src || a);
         return '<div class="audio-item">' +
           '<span class="icon">🎙</span>' +
           '<div class="body">' +
@@ -391,7 +399,7 @@
       '<div class="media-head"><h3>📷 How it looked</h3><span class="n">' + imgs.length + "</span></div>";
     if (imgs.length) {
       html += '<div class="photo-grid">' + imgs.map(function (im, i) {
-        var src = im.src || im;
+        var src = url(im.src || im);
         return '<figure class="photo" data-lightbox="' + i + '" data-src="' + esc(src) + '" data-cap="' + esc(im.caption || "") + '">' +
           '<img src="' + esc(src) + '" alt="' + esc(im.caption || r.title) + '" loading="lazy">' +
           (im.caption ? "<figcaption>" + esc(im.caption) + "</figcaption>" : "") +
@@ -550,7 +558,17 @@
     main.innerHTML =
       '<div class="page-head"><p class="eyebrow">For whoever keeps the journal</p><h1>How to add a recipe</h1></div>' +
       '<div class="prose">' +
-        "<p>Every recipe is one entry in <code>data/recipes.js</code>. Copy the block below, paste it into the list, change the words, and the website updates itself — no build step, nothing to install.</p>" +
+        (window.MRJStore && window.MRJStore.configured()
+          ? "<p>This journal is connected to a database, so adding a recipe is a form — no files, no commits. " +
+            'Open <a href="admin.html"><strong>the writing desk</strong></a>, sign in, fill it in, and drop her ' +
+            "photos, videos and voice notes straight in.</p>" +
+            '<p><a class="btn primary" href="admin.html">Open the writing desk →</a></p>' +
+            '<hr class="rule"><h2>The file way</h2><p>Still available if you prefer it — set ' +
+            '<code>source: "local"</code> in <code>config.js</code>. Recipes then come from <code>data/recipes.js</code>:</p>'
+          : "<p>Every recipe is one entry in <code>data/recipes.js</code>. Copy the block below, paste it into the list, change the words, and the website updates itself — no build step, nothing to install.</p>" +
+            "<p>Once Mom&rsquo;s videos and voice notes start piling up, git stops being the right place for them — " +
+            "GitHub refuses files over 100 MB and keeps every version forever. See <code>docs/database-setup.md</code> " +
+            "to move the media to a proper database and add recipes from a form instead.</p>") +
         "<h2>1. Save the media first</h2>" +
         "<ul>" +
           "<li>Photos Mom sends → <code>media/images/</code></li>" +
@@ -670,7 +688,7 @@
     });
   }
 
-  window.addEventListener("hashchange", render);
+  window.addEventListener("hashchange", function () { if (loaded) render(); });
 
   /* search */
   var searchTimer;
@@ -702,5 +720,30 @@
     save("mrj:theme", next);
   });
 
-  render();
+  /* ---------------- boot ----------------
+     Recipes may come from a database, so nothing renders until the
+     store hands them over. With a cache present the first paint is
+     immediate and the network refresh re-renders behind it. */
+
+  function boot() {
+    main.innerHTML = '<div class="empty"><span class="big">🍵</span>Getting the recipes\u2026</div>';
+
+    window.MRJStore.load({
+      onUpdate: function (fresh) {
+        RECIPES = fresh;
+        render();                      // newer copy arrived from the database
+      },
+      onError: function (err) {
+        console.error(err);
+        main.innerHTML = '<div class="empty"><span class="big">📡</span>' +
+          "Couldn&rsquo;t reach the recipe database.<br><small>" + esc(err.message) + "</small></div>";
+      }
+    }).then(function (list) {
+      RECIPES = list;
+      loaded = true;
+      render();
+    });
+  }
+
+  boot();
 })();
