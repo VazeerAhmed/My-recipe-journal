@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 300" role="img" aria-label="Kitchen photo placeholder">
+  <rect width="400" height="300" fill="#efe6d8"/>
+  <rect x="60" y="120" width="280" height="14" rx="7" fill="#d8c6ab"/>
+  <rect x="96" y="70" width="60" height="50" rx="8" fill="#b4553d" opacity=".85"/>
+  <rect x="176" y="52" width="46" height="68" rx="8" fill="#6d7f63" opacity=".85"/>
+  <rect x="242" y="84" width="62" height="36" rx="8" fill="#c9992b" opacity=".85"/>
+  <text x="200" y="200" font-family="Georgia, serif" font-size="17" fill="#9a8f82" text-anchor="middle">photo goes here</text>
+</svg>

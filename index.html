@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Mom's Recipe Journal</title>
+<meta name="description" content="A family cookbook of Mom's recipes — with her photos, voice notes and videos." />
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>&#127859;</text></svg>" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600&family=Caveat:wght@600&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="assets/css/style.css" />
+</head>
+<body>
+
+<a class="skip-link" href="#main">Skip to content</a>
+
+<header class="site-header">
+  <div class="wrap header-inner">
+    <a class="brand" href="#/">
+      <span class="brand-mark">✻</span>
+      <span class="brand-text">
+        <span class="brand-title">Mom&rsquo;s Recipe Journal</span>
+        <span class="brand-sub">handed down, one page at a time</span>
+      </span>
+    </a>
+
+    <nav class="site-nav" aria-label="Categories">
+      <a href="#/" data-nav="home">Home</a>
+      <a href="#/c/breakfast" data-nav="breakfast">Breakfast</a>
+      <a href="#/c/lunch" data-nav="lunch">Lunch</a>
+      <a href="#/c/dinner" data-nav="dinner">Dinner</a>
+      <a href="#/c/treats" data-nav="treats">Treats</a>
+      <a href="#/favourites" data-nav="favourites">♥ Saved</a>
+    </nav>
+
+    <div class="header-tools">
+      <label class="search" role="search">
+        <span class="visually-hidden">Search recipes</span>
+        <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg>
+        <input id="search" type="search" placeholder="Search recipes or ingredients…" autocomplete="off" />
+      </label>
+      <button id="theme-toggle" class="icon-btn" type="button" aria-label="Switch theme" title="Switch theme">◐</button>
+    </div>
+  </div>
+</header>
+
+<main id="main" class="wrap" tabindex="-1"></main>
+
+<footer class="site-footer">
+  <div class="wrap">
+    <p>Made with love for Mom&rsquo;s kitchen. <span class="dot">•</span> <a href="#/about">How to add a recipe</a></p>
+  </div>
+</footer>
+
+<!-- Recipe data. To add a recipe, edit data/recipes.js -->
+<script src="data/recipes.js"></script>
+<script src="assets/js/app.js"></script>
+</body>
+</html>
