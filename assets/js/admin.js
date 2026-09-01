@@ -18,9 +18,9 @@
     ["glutenFree", "Gluten-free"], ["dairyFree", "Dairy-free"]
   ];
   var KINDS = [
-    { key: "videos", label: "Videos", icon: "🎬", accept: "video/*", hint: "Clips you filmed. Long ones are better as a YouTube link — see below." },
-    { key: "audio",  label: "Voice notes", icon: "🎙", accept: "audio/*", hint: "Her WhatsApp voice messages. .m4a and .mp3 play everywhere; .opus often doesn't." },
-    { key: "images", label: "Photos", icon: "📷", accept: "image/*", hint: "Photos she sends. The first one becomes the recipe's thumbnail." }
+    { key: "videos", label: "Videos", icon: "", accept: "video/*", hint: "Clips you filmed. Long ones are better as a YouTube link — see below." },
+    { key: "audio",  label: "Voice notes", icon: "", accept: "audio/*", hint: "Her WhatsApp voice messages. .m4a and .mp3 play everywhere; .opus often doesn't." },
+    { key: "images", label: "Photos", icon: "", accept: "image/*", hint: "Photos she sends. The first one becomes the recipe's thumbnail." }
   ];
 
   var recipes = [];       // everything in the database
@@ -96,7 +96,7 @@
     var rows = recipes.map(function (r) {
       var counts = ["videos", "audio", "images"].map(function (k) {
         var n = (r.media && r.media[k] || []).length;
-        return n ? { videos: "🎬", audio: "🎙", images: "📷" }[k] + " " + n : "";
+        return n ? { videos: "film", audio: "voice", images: "photo" }[k] + " " + n : "";
       }).filter(Boolean).join("  ");
       var origin = MRJStore.configured() ? "" :
         (r._draft ? ' <span class="tag">in this browser</span>' : ' <span class="tag muted">in data/recipes.js</span>');
@@ -144,7 +144,7 @@
         ? '<div class="sheet"><table class="admin-table"><thead><tr>' +
           "<th>Recipe</th><th>Chapter</th><th>Media</th><th>Added</th><th></th>" +
           "</tr></thead><tbody>" + rows + "</tbody></table></div>"
-        : '<div class="empty"><span class="big">📖</span>Nothing saved yet. Start with <strong>+ New recipe</strong>.</div>');
+        : '<div class="empty"><span class="big">&mdash;</span>Nothing saved yet. Start with <strong>+ New recipe</strong>.</div>');
 
     document.getElementById("new-recipe").addEventListener("click", function () {
       draft = blank();
@@ -173,7 +173,12 @@
         recipes.forEach(function (r) { if (r.id === edit) draft = JSON.parse(JSON.stringify(r)); });
         screenEditor();
       } else if (del) {
-        if (!confirm("Delete “" + del + "” from the journal? The uploaded photos and videos stay in storage.")) return;
+        var isDraft = recipes.some(function (r) { return r.id === del && r._draft; });
+        if (!MRJStore.configured() && !isDraft) {
+          toast("That one lives in data/recipes.js — delete it there, or edit it here to override it.", "bad");
+          return;
+        }
+        if (!confirm("Delete “" + del + "” from the journal?")) return;
         MRJStore.remove(del).then(function () {
           toast("Deleted.");
           refresh();
@@ -190,7 +195,7 @@
     return '<ul class="media-rows">' + list.map(function (m, i) {
       var isUrl = /^https?:/i.test(m.src || "");
       return "<li>" +
-        '<span class="src" title="' + esc(m.src) + '">' + (isUrl ? "🔗 " : "") + esc(m.src) + "</span>" +
+        '<span class="src" title="' + esc(m.src) + '">' + (isUrl ? "link · " : "") + esc(m.src) + "</span>" +
         '<input type="text" placeholder="Caption (worth writing — you\'ll be glad in ten years)" value="' + esc(m.caption || "") + '" data-caption="' + kind + ":" + i + '">' +
         '<button type="button" class="btn danger small" data-rm="' + kind + ":" + i + '">Remove</button>' +
         "</li>";
@@ -251,7 +256,7 @@
 
         KINDS.map(function (k) {
           return '<section class="media-editor" data-kind="' + k.key + '">' +
-            '<div class="media-head"><h3>' + k.icon + " " + k.label + "</h3></div>" +
+            '<div class="media-head"><h3>' + k.label + "</h3></div>" +
             '<p class="hint">' + esc(k.hint) + "</p>" +
             '<div class="uploader">' +
               '<input type="file" accept="' + k.accept + '" multiple data-upload="' + k.key + '" id="up-' + k.key + '">' +
@@ -331,15 +336,15 @@
 
     var queue = files.slice();
     function next() {
-      if (!queue.length) { bar.hidden = true; fill.style.width = "0%"; return; }
+      if (!queue.length) { bar.hidden = true; fill.style.transform = "scaleX(0)"; return; }
       var file = queue.shift();
       var name = slug(file.name.replace(/\.[^.]+$/, "")) + "." + (file.name.split(".").pop() || "bin").toLowerCase();
       var path = id + "/" + name;
 
-      fill.style.width = "0%";
+      fill.style.transform = "scaleX(0)";
       // The store decides what the src should be: an object path in the
       // bucket, or a "drawer:" reference to a file kept in this browser.
-      MRJStore.addFile(path, file, function (pct) { fill.style.width = pct + "%"; })
+      MRJStore.addFile(path, file, function (pct) { fill.style.transform = "scaleX(" + (pct / 100) + ")"; })
         .then(function (src) {
           draft.media[kind].push({ src: src || path, caption: "" });
           redrawMedia(kind);
@@ -521,12 +526,29 @@
       if (!window.MRJDrawer || !MRJDrawer.supported()) { screenNoStorage(); return; }
     }
 
-    root.innerHTML = '<div class="empty"><span class="big">🍵</span>Opening the journal…</div>';
+    root.innerHTML = '<div class="empty"><span class="big">&hellip;</span>Opening the journal…</div>';
     refresh().catch(function (ex) {
       toast(ex.message, "bad");
       screenSignIn();
     });
   }
+
+  /* theme — shares the journal's setting so the two pages never disagree */
+  (function theme() {
+    var btn = document.getElementById("theme-toggle");
+    function read() { try { return JSON.parse(localStorage.getItem("mrj:theme") || "null"); } catch (e) { return null; } }
+    function apply(t) {
+      if (t === "light") document.documentElement.setAttribute("data-theme", "light");
+      else document.documentElement.removeAttribute("data-theme");
+    }
+    apply(read() || "dark");
+    if (!btn) return;
+    btn.addEventListener("click", function () {
+      var next = document.documentElement.getAttribute("data-theme") === "light" ? "dark" : "light";
+      apply(next);
+      try { localStorage.setItem("mrj:theme", JSON.stringify(next)); } catch (e) {}
+    });
+  })();
 
   signoutBtn.addEventListener("click", function () {
     MRJStore.signOut();

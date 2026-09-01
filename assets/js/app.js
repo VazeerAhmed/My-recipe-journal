@@ -9,10 +9,10 @@
   var loaded = false;
 
   var CATEGORIES = [
-    { id: "breakfast", name: "Breakfast", emoji: "🌅", blurb: "Mornings at Mom's table" },
-    { id: "lunch",     name: "Lunch",     emoji: "🍛", blurb: "The everyday afternoon plate" },
-    { id: "dinner",    name: "Dinner",    emoji: "🌙", blurb: "What the whole house waits for" },
-    { id: "treats",    name: "Treats",    emoji: "🍰", blurb: "Sweets, snacks and festival food" }
+    { id: "breakfast", name: "Breakfast", blurb: "Mornings at her table" },
+    { id: "lunch",     name: "Lunch",     blurb: "The everyday afternoon plate" },
+    { id: "dinner",    name: "Dinner",    blurb: "What the whole house waits for" },
+    { id: "treats",    name: "Treats",    blurb: "Sweets, snacks and festival food" }
   ];
 
   var DIETS = [
@@ -222,35 +222,39 @@
   function cardHTML(r) {
     var cover = coverImage(r);
     var flags = "";
-    if (media(r, "videos").length) flags += "<span>▶ " + media(r, "videos").length + "</span>";
-    if (media(r, "audio").length) flags += "<span>🎙 " + media(r, "audio").length + "</span>";
-    if (media(r, "images").length) flags += "<span>📷 " + media(r, "images").length + "</span>";
+    if (media(r, "videos").length) flags += "<span>film " + media(r, "videos").length + "</span>";
+    if (media(r, "audio").length)  flags += "<span>voice " + media(r, "audio").length + "</span>";
+    if (media(r, "images").length) flags += "<span>photo " + media(r, "images").length + "</span>";
+
+    // No photograph? A typographic plate — never an invented stock image.
+    var plate = cover
+      ? '<img src="' + esc(cover) + '" alt="' + esc(r.title) + '" loading="lazy" onerror="this.remove()">'
+      : '<span class="entry__initial" aria-hidden="true">' + esc(String(r.title || "?").trim().charAt(0)) + "</span>";
 
     return '' +
-      '<a class="card" href="#/r/' + encodeURIComponent(r.id) + '">' +
-        '<div class="card-thumb">' +
-          (cover ? '<img src="' + esc(cover) + '" alt="' + esc(r.title) + '" loading="lazy" onerror="this.remove()">' : "🍲") +
-          (flags ? '<div class="card-media-flags">' + flags + "</div>" : "") +
-        "</div>" +
-        '<div class="card-body">' +
-          '<span class="card-cat">' + esc(catName(r.category)) + "</span>" +
-          "<h3>" + esc(r.title) + "</h3>" +
+      '<a class="entry" href="#/r/' + encodeURIComponent(r.id) + '">' +
+        '<span class="entry__plate">' + plate +
+          (flags ? '<span class="entry__flags">' + flags + "</span>" : "") +
+        "</span>" +
+        '<span class="entry__body">' +
+          '<span class="entry__cat">' + esc(catName(r.category)) + "</span>" +
+          '<span class="entry__title">' + esc(r.title) + "</span>" +
           badgeHTML(r) +
-          '<div class="card-meta">' +
+          '<span class="entry__meta">' +
             '<span class="stars">' + stars(r.rating) + "</span>" +
             "<span>" + shortTime(totalTime(r)) + "</span>" +
-            "<span>" + (r.portions ? r.portions + " portions" : "") + "</span>" +
-          "</div>" +
-        "</div>" +
+            (r.portions ? "<span>" + r.portions + " portions</span>" : "") +
+          "</span>" +
+        "</span>" +
       "</a>";
   }
 
   function gridHTML(list) {
     if (!list.length) {
-      return '<div class="empty"><span class="big">🥄</span>Nothing here yet.' +
-        '<p style="margin:1rem 0 0"><a class="btn primary" href="admin.html">+ Add a recipe</a></p></div>';
+      return '<div class="empty"><span class="big">&mdash;</span>Nothing here yet.' +
+        '<p style="margin:1rem 0 0"><a class="btn" href="admin.html">+ Add a recipe</a></p></div>';
     }
-    return '<div class="grid">' + list.map(cardHTML).join("") + "</div>";
+    return '<div class="catalogue">' + list.map(cardHTML).join("") + "</div>";
   }
 
   function filterBarHTML(count) {
@@ -275,54 +279,55 @@
 
   /* ---------------- views ---------------- */
 
-  function viewHome() {
-    var total = RECIPES.length;
+  // The masthead's issue line — real counts only, never an invented metric.
+  function issueLine() {
+    var el = document.getElementById("issue-line");
+    if (!el) return;
     var withVoice = RECIPES.filter(function (r) { return media(r, "audio").length; }).length;
-    var withVideo = RECIPES.filter(function (r) { return media(r, "videos").length; }).length;
+    var withFilm  = RECIPES.filter(function (r) { return media(r, "videos").length; }).length;
+    var bits = [RECIPES.length + (RECIPES.length === 1 ? " recipe" : " recipes")];
+    if (withVoice) bits.push(withVoice + " in her voice");
+    if (withFilm) bits.push(withFilm + " on film");
+    el.innerHTML = "The family archive · <b>" + bits.join("</b> · <b>") + "</b>";
+  }
 
-    var tiles = CATEGORIES.map(function (c) {
-      var n = RECIPES.filter(function (r) { return r.category === c.id; }).length;
-      return '<a class="tile" href="#/c/' + c.id + '">' +
-        '<span class="emoji">' + c.emoji + "</span>" +
-        "<h3>" + c.name + "</h3>" +
-        "<p>" + esc(c.blurb) + " · " + n + " recipe" + (n === 1 ? "" : "s") + "</p>" +
-        "</a>";
-    }).join("");
+  // Catalogue's opener: the count, then the qualifier. No adjectives.
+  function ledgerHTML(count, qualifier, tools) {
+    return '<div class="ledger">' +
+      '<span class="ledger__count">' + count + "</span>" +
+      '<span class="ledger__qual">' + esc(qualifier) + "</span>" +
+      (tools ? '<span class="ledger__tools">' + tools + "</span>" : "") +
+      "</div>";
+  }
 
-    var recent = sorted(RECIPES.slice()).slice(0, 8);
+  function viewHome() {
+    var list = sorted(RECIPES.filter(matches));
+    var n = RECIPES.length;
 
     main.innerHTML =
-      '<section class="hero">' +
-        "<div>" +
-          '<p class="script">from her kitchen to ours</p>' +
-          "<h1>Mom&rsquo;s Recipe Journal</h1>" +
-          '<p class="lede">Every page is one of her recipes — written the way her notebook does it, with room for the photos she sends, the voice notes she records and the videos we film over her shoulder.</p>' +
-          '<div class="hero-stats">' +
-            '<div class="stat"><b>' + total + "</b><span>Recipes</span></div>" +
-            '<div class="stat"><b>' + withVoice + "</b><span>Voice notes</span></div>" +
-            '<div class="stat"><b>' + withVideo + "</b><span>Videos</span></div>" +
-          "</div>" +
-        "</div>" +
-        '<div class="hero-card"><p>“A little more, a little less —<br>taste it and you&rsquo;ll know.”</p></div>' +
-      "</section>" +
-      '<section class="section-head"><h2>The chapters</h2>' +
-        '<a class="btn primary" href="admin.html">+ Add a recipe</a></section>' +
-      '<div class="tiles">' + tiles + "</div>" +
-      '<hr class="rule">' +
-      "<section><h2>Recently added</h2>" + gridHTML(recent) + "</section>";
+      ledgerHTML(
+        n + (n === 1 ? " recipe" : " recipes"),
+        "everything she has written down, newest first",
+        '<a class="btn" href="admin.html">+ Add a recipe</a>'
+      ) +
+      filterBarHTML(list.length) +
+      gridHTML(list);
+
+    wireFilters();
   }
 
   function viewCategory(cat) {
     var c = null;
     CATEGORIES.forEach(function (x) { if (x.id === cat) c = x; });
-    var list = sorted(RECIPES.filter(function (r) { return r.category === cat; }).filter(matches));
+    var all = RECIPES.filter(function (r) { return r.category === cat; });
+    var list = sorted(all.filter(matches));
 
     main.innerHTML =
-      '<div class="page-head">' +
-        '<p class="eyebrow">Chapter</p>' +
-        "<h1>" + (c ? c.emoji + " " + c.name : esc(cat)) + "</h1>" +
-        '<p class="lede">' + esc(c ? c.blurb : "") + "</p>" +
-      "</div>" +
+      ledgerHTML(
+        (c ? c.name : esc(cat)),
+        all.length + (all.length === 1 ? " recipe" : " recipes") + " · " + (c ? c.blurb.toLowerCase() : ""),
+        ""
+      ) +
       filterBarHTML(list.length) +
       gridHTML(list);
 
@@ -332,10 +337,11 @@
   function viewSearch() {
     var list = sorted(RECIPES.filter(matches));
     main.innerHTML =
-      '<div class="page-head">' +
-        '<p class="eyebrow">Search</p>' +
-        "<h1>&ldquo;" + esc(state.query) + "&rdquo;</h1>" +
-      "</div>" +
+      ledgerHTML(
+        list.length + (list.length === 1 ? " match" : " matches"),
+        "for \u201c" + state.query.trim() + "\u201d — searched across titles, ingredients and steps",
+        ""
+      ) +
       filterBarHTML(list.length) +
       gridHTML(list);
     wireFilters();
@@ -345,11 +351,11 @@
     var f = favs();
     var list = sorted(RECIPES.filter(function (r) { return f.indexOf(r.id) !== -1; }).filter(matches));
     main.innerHTML =
-      '<div class="page-head">' +
-        '<p class="eyebrow">Saved</p>' +
-        "<h1>♥ The ones we cook most</h1>" +
-        '<p class="lede">Tap the heart on any recipe to keep it here. Saved on this device.</p>' +
-      "</div>" +
+      ledgerHTML(
+        list.length + (list.length === 1 ? " recipe" : " recipes"),
+        "the ones you cook most — kept on this device",
+        ""
+      ) +
       gridHTML(list);
   }
 
@@ -365,7 +371,7 @@
     var html = "";
 
     html += '<section class="media-section">' +
-      '<div class="media-head"><h3>🎬 Cooking with Mom</h3><span class="n">' + vids.length + "</span></div>";
+      '<div class="media-head"><h3>Cooking with her</h3><span class="n">' + vids.length + "</span></div>";
     if (vids.length) {
       html += '<div class="video-grid">' + vids.map(function (v) {
         var src = url(v.src || v);
@@ -382,12 +388,11 @@
     html += "</section>";
 
     html += '<section class="media-section">' +
-      '<div class="media-head"><h3>🎙 Her voice notes</h3><span class="n">' + auds.length + "</span></div>";
+      '<div class="media-head"><h3>Her voice</h3><span class="n">' + auds.length + "</span></div>";
     if (auds.length) {
       html += '<div class="audio-list">' + auds.map(function (a) {
         var src = url(a.src || a);
         return '<div class="audio-item">' +
-          '<span class="icon">🎙</span>' +
           '<div class="body">' +
             '<div class="cap">' + esc(a.caption || "Voice message") + "</div>" +
             '<audio controls preload="none" src="' + esc(src) + '"></audio>' +
@@ -399,7 +404,7 @@
     html += "</section>";
 
     html += '<section class="media-section">' +
-      '<div class="media-head"><h3>📷 How it looked</h3><span class="n">' + imgs.length + "</span></div>";
+      '<div class="media-head"><h3>How it looked</h3><span class="n">' + imgs.length + "</span></div>";
     if (imgs.length) {
       html += '<div class="photo-grid">' + imgs.map(function (im, i) {
         var src = url(im.src || im);
@@ -420,7 +425,7 @@
     var r = null;
     RECIPES.forEach(function (x) { if (x.id === id) r = x; });
     if (!r) {
-      main.innerHTML = '<div class="empty"><span class="big">🤔</span>That recipe isn&rsquo;t in the journal. <a href="#/">Back home</a></div>';
+      main.innerHTML = '<div class="empty"><span class="big">?</span>That recipe isn&rsquo;t in the journal. <a href="#/">Back home</a></div>';
       return;
     }
 
@@ -442,7 +447,7 @@
         "</div>" +
         '<div class="recipe-actions">' +
           '<button class="btn" id="fav-btn" type="button">' + (isFav(r.id) ? "♥ Saved" : "♡ Save") + "</button>" +
-          '<button class="btn" id="print-btn" type="button">🖨 Print</button>' +
+          '<button class="btn" id="print-btn" type="button">Print</button>' +
           '<a class="btn" href="#/c/' + esc(r.category) + '">← Back</a>' +
         "</div>" +
       "</div>" +
@@ -565,7 +570,7 @@
         '<p>Press <strong>+ Add recipe</strong> — it&rsquo;s in the header of every page. That opens the ' +
         'writing desk: fill in the form, drop her photos, videos and voice notes in, and save. ' +
         'No files to edit, nothing to install.</p>' +
-        '<p><a class="btn primary" href="admin.html">+ Add a recipe</a></p>' +
+        '<p><a class="btn" href="admin.html">+ Add a recipe</a></p>' +
         (remote
           ? "<p>This journal is connected to a database, so saving publishes straight away — the recipe " +
             "is live for everyone, on every device.</p>"
@@ -683,8 +688,10 @@
     else if (parts[0] === "search") viewSearch();
     else viewHome();
 
+    issueLine();
+
     var navKey = parts[0] === "c" ? parts[1] : (parts[0] || "home");
-    document.querySelectorAll(".site-nav a").forEach(function (a) {
+    document.querySelectorAll(".chapters a").forEach(function (a) {
       a.classList.toggle("active", a.dataset.nav === navKey);
     });
   }
@@ -708,16 +715,22 @@
     }, 180);
   });
 
-  /* theme */
+  /* theme — dark is the default; daylight is opt-in */
   var themeBtn = document.getElementById("theme-toggle");
-  var saved = store("mrj:theme", null);
-  if (saved) document.documentElement.setAttribute("data-theme", saved);
-  else if (window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches) {
-    document.documentElement.setAttribute("data-theme", "dark");
+  var savedTheme = store("mrj:theme", null);
+
+  function applyTheme(t) {
+    if (t === "light") document.documentElement.setAttribute("data-theme", "light");
+    else document.documentElement.removeAttribute("data-theme");
   }
+
+  // Dark is the journal's identity, not a preference — daylight is opt-in
+  // via the toggle, for cooking in a bright kitchen.
+  applyTheme(savedTheme || "dark");
+
   themeBtn.addEventListener("click", function () {
-    var next = document.documentElement.getAttribute("data-theme") === "dark" ? "light" : "dark";
-    document.documentElement.setAttribute("data-theme", next);
+    var next = document.documentElement.getAttribute("data-theme") === "light" ? "dark" : "light";
+    applyTheme(next);
     save("mrj:theme", next);
   });
 
@@ -727,7 +740,7 @@
      immediate and the network refresh re-renders behind it. */
 
   function boot() {
-    main.innerHTML = '<div class="empty"><span class="big">🍵</span>Getting the recipes\u2026</div>';
+    main.innerHTML = '<div class="empty"><span class="big">&hellip;</span>Getting the recipes\u2026</div>';
 
     window.MRJStore.load({
       onUpdate: function (fresh) {
@@ -736,7 +749,7 @@
       },
       onError: function (err) {
         console.error(err);
-        main.innerHTML = '<div class="empty"><span class="big">📡</span>' +
+        main.innerHTML = '<div class="empty"><span class="big">!</span>' +
           "Couldn&rsquo;t reach the recipe database.<br><small>" + esc(err.message) + "</small></div>";
       }
     }).then(function (list) {

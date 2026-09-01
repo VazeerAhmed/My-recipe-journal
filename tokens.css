@@ -1,0 +1,97 @@
+/* Hallmark · tokens · Mom's Recipe Journal
+ * theme: custom (tuned) · vibe: "coffee-table dark, archival, kitchen-legible"
+ * axes: dark / roman-serif / chromatic-amber ~72°
+ *
+ * Every colour and font in the site references a token from this file.
+ * Nothing downstream inlines a raw oklch()/hex value.
+ */
+
+:root {
+  /* ---- type roles -------------------------------------------------- */
+  --font-display: "Fraunces", "Cormorant Garamond", Georgia, "Times New Roman", serif;
+  --font-body:    "Manrope", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-hand:    "Caveat", "Segoe Script", cursive;
+
+  /* ---- type scale -------------------------------------------------- */
+  --text-2xs: 0.6875rem;
+  --text-xs:  0.75rem;
+  --text-sm:  0.8125rem;
+  --text-base:1rem;
+  --text-lg:  1.125rem;
+  --text-xl:  1.375rem;
+  --text-2xl: 1.75rem;
+  --text-3xl: 2.25rem;
+  --text-4xl: 3rem;
+  --text-display-s: clamp(2.25rem, 5.5vw, 3.5rem);
+  --text-display:   clamp(2.75rem, 8vw, 5.5rem);
+
+  /* ---- 4pt spacing scale ------------------------------------------- */
+  --space-3xs: 0.25rem;
+  --space-2xs: 0.5rem;
+  --space-xs:  0.75rem;
+  --space-sm:  1rem;
+  --space-md:  1.5rem;
+  --space-lg:  2rem;
+  --space-xl:  3rem;
+  --space-2xl: 4rem;
+  --space-3xl: 6rem;
+  --page-gutter: clamp(1.125rem, 4vw, 3rem);
+
+  /* ---- rules, radii ------------------------------------------------ */
+  --rule-hair: 1px;
+  --radius-sm: 2px;
+  --radius-md: 4px;
+  --radius-pill: 999px;
+
+  /* ---- motion ------------------------------------------------------ */
+  --ease-out:    cubic-bezier(0.16, 1, 0.30, 1);
+  --ease-in:     cubic-bezier(0.40, 0, 1, 1);
+  --ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
+  --dur-fast: 120ms;
+  --dur-base: 220ms;
+  --dur-slow: 420ms;
+
+  /* ---- colour · dark (default) ------------------------------------- *
+   * Warm near-black tinted toward the brass anchor. Never pure #000.   */
+  --color-paper:      oklch(15%   0.012 72);
+  --color-paper-2:    oklch(18.5% 0.013 72);
+  --color-paper-3:    oklch(22%   0.014 72);
+  --color-ink:        oklch(93%   0.012 78);
+  --color-ink-2:      oklch(80%   0.011 78);
+  --color-muted:      oklch(66%   0.012 78);
+  --color-neutral:    oklch(58%   0.012 75);
+  --color-rule:       oklch(30%   0.013 72);
+  --color-rule-2:     oklch(24%   0.012 72);
+  --color-accent:     oklch(76%   0.14  72);
+  --color-accent-ink: oklch(15%   0.012 72);
+  --color-focus:      oklch(80%   0.19  72);
+  --color-danger:     oklch(70%   0.15  30);
+  --color-shadow:     oklch(0% 0 0 / 0.5);
+  --color-scrim:      oklch(8% 0.010 72 / 0.94);
+
+  /* ---- print ink · paper is literal paper here ------------------- */
+  --color-print-paper: oklch(100% 0 0);
+  --color-print-ink:   oklch(18% 0.010 60);
+  --color-print-rule:  oklch(70% 0.008 60);
+}
+
+/* ---- colour · light --------------------------------------------------
+ * The same system in daylight, for a bright kitchen. Warm cream paper,
+ * deepened amber accent so it still carries contrast. Never pure #fff.  */
+:root[data-theme="light"] {
+  --color-paper:      oklch(95.5% 0.014 78);
+  --color-paper-2:    oklch(98.5% 0.010 80);
+  --color-paper-3:    oklch(91%   0.016 78);
+  --color-ink:        oklch(22%   0.014 60);
+  --color-ink-2:      oklch(38%   0.013 60);
+  --color-muted:      oklch(50%   0.012 62);
+  --color-neutral:    oklch(50%   0.013 65);
+  --color-rule:       oklch(80%   0.016 78);
+  --color-rule-2:     oklch(87%   0.012 78);
+  --color-accent:     oklch(52%   0.15  48);
+  --color-accent-ink: oklch(97%   0.010 78);
+  --color-focus:      oklch(50%   0.19  48);
+  --color-danger:     oklch(48%   0.17  30);
+  --color-shadow:     oklch(30% 0.02 60 / 0.14);
+  --color-scrim:      oklch(20% 0.014 60 / 0.90);
+}

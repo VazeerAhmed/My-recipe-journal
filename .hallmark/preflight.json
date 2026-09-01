@@ -1,0 +1,10 @@
+{
+  "scanned": "2026-09-01",
+  "framework": "none (vanilla HTML/CSS/JS, no build step)",
+  "font_stack": "was: Cormorant Garamond + Caveat + Inter (Google Fonts) → replaced (Inter fails gate 1)",
+  "palette": "was: 42 hard-coded hex values, no :root system → replaced with OKLCH tokens",
+  "spacing": "was: ad-hoc rem values → replaced with 4pt scale",
+  "motion": "no library detected — motion-cut project",
+  "preserved": ["three type roles (display / hand / body)", "paper-and-ink concept", "light+dark toggle", "all existing functionality"],
+  "introduced": ["OKLCH tokens", "4pt spacing scale", "type scale", "macrostructure", "nav + footer archetypes", "slop-test gates"]
+}

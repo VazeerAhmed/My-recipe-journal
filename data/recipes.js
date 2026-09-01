@@ -83,10 +83,7 @@ window.RECIPES = [
     notes: "She never measures the water — she just says the dough should feel like your earlobe.",
     addedOn: "2026-08-28",
     media: {
-      images: [
-        { src: "media/images/placeholder-dish.svg", caption: "Straight off the tawa" },
-        { src: "media/images/placeholder-table.svg", caption: "Sunday breakfast spread" }
-      ],
+      images: [],
       videos: [],
       audio: []
     }
@@ -129,7 +126,7 @@ window.RECIPES = [
     goesWith: "Plain basmati rice, sliced onion with lemon, and a spoon of pickle on the side.",
     notes: "Always better the next day. She makes double on purpose.",
     addedOn: "2026-08-27",
-    media: { images: [{ src: "media/images/placeholder-dish.svg", caption: "Simmering, almost there" }], videos: [], audio: [] }
+    media: { images: [], videos: [], audio: [] }
   },
 
   /* ------------------------------ DINNER ----------------------------- */
@@ -170,7 +167,7 @@ window.RECIPES = [
     goesWith: "Hot rotis, jeera rice, and a raw onion salad with lemon.",
     notes: "She adds one extra green chilli 'for the smell, not the heat'.",
     addedOn: "2026-08-26",
-    media: { images: [{ src: "media/images/placeholder-table.svg", caption: "Dinner is served" }], videos: [], audio: [] }
+    media: { images: [], videos: [], audio: [] }
   },
 
   /* ------------------------------ TREATS ----------------------------- */
@@ -204,7 +201,7 @@ window.RECIPES = [
     goesWith: "A tin that lives on the top shelf and a glass of milk.",
     notes: "Made every Diwali. The first one is always broken 'to check'.",
     addedOn: "2026-08-25",
-    media: { images: [{ src: "media/images/placeholder-dish.svg", caption: "Fresh out of the pan" }], videos: [], audio: [] }
+    media: { images: [], videos: [], audio: [] }
   }
 
 ];
