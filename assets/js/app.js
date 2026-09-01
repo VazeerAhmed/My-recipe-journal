@@ -247,7 +247,8 @@
 
   function gridHTML(list) {
     if (!list.length) {
-      return '<div class="empty"><span class="big">🥄</span>Nothing here yet. Add a recipe in <code>data/recipes.js</code> — see <a href="#/about">how to add a recipe</a>.</div>';
+      return '<div class="empty"><span class="big">🥄</span>Nothing here yet.' +
+        '<p style="margin:1rem 0 0"><a class="btn primary" href="admin.html">+ Add a recipe</a></p></div>';
     }
     return '<div class="grid">' + list.map(cardHTML).join("") + "</div>";
   }
@@ -304,7 +305,9 @@
         "</div>" +
         '<div class="hero-card"><p>“A little more, a little less —<br>taste it and you&rsquo;ll know.”</p></div>' +
       "</section>" +
-      '<section><h2>The chapters</h2><div class="tiles">' + tiles + "</div></section>" +
+      '<section class="section-head"><h2>The chapters</h2>' +
+        '<a class="btn primary" href="admin.html">+ Add a recipe</a></section>' +
+      '<div class="tiles">' + tiles + "</div>" +
       '<hr class="rule">' +
       "<section><h2>Recently added</h2>" + gridHTML(recent) + "</section>";
   }
@@ -555,41 +558,39 @@
   }
 
   function viewAbout() {
+    var remote = window.MRJStore && window.MRJStore.configured();
     main.innerHTML =
       '<div class="page-head"><p class="eyebrow">For whoever keeps the journal</p><h1>How to add a recipe</h1></div>' +
       '<div class="prose">' +
-        (window.MRJStore && window.MRJStore.configured()
-          ? "<p>This journal is connected to a database, so adding a recipe is a form — no files, no commits. " +
-            'Open <a href="admin.html"><strong>the writing desk</strong></a>, sign in, fill it in, and drop her ' +
-            "photos, videos and voice notes straight in.</p>" +
-            '<p><a class="btn primary" href="admin.html">Open the writing desk →</a></p>' +
-            '<hr class="rule"><h2>The file way</h2><p>Still available if you prefer it — set ' +
-            '<code>source: "local"</code> in <code>config.js</code>. Recipes then come from <code>data/recipes.js</code>:</p>'
-          : "<p>Every recipe is one entry in <code>data/recipes.js</code>. Copy the block below, paste it into the list, change the words, and the website updates itself — no build step, nothing to install.</p>" +
-            "<p>Once Mom&rsquo;s videos and voice notes start piling up, git stops being the right place for them — " +
-            "GitHub refuses files over 100 MB and keeps every version forever. See <code>docs/database-setup.md</code> " +
-            "to move the media to a proper database and add recipes from a form instead.</p>") +
-        "<h2>1. Save the media first</h2>" +
-        "<ul>" +
-          "<li>Photos Mom sends → <code>media/images/</code></li>" +
-          "<li>Videos you record → <code>media/videos/</code></li>" +
-          "<li>Her voice messages → <code>media/audio/</code></li>" +
-        "</ul>" +
-        "<p>Use simple file names with no spaces, for example <code>aloo-paratha-1.jpg</code>. A YouTube link works too — just paste the link as the video <code>src</code>.</p>" +
-        "<h2>2. Add the recipe entry</h2>" +
+        '<p>Press <strong>+ Add recipe</strong> — it&rsquo;s in the header of every page. That opens the ' +
+        'writing desk: fill in the form, drop her photos, videos and voice notes in, and save. ' +
+        'No files to edit, nothing to install.</p>' +
+        '<p><a class="btn primary" href="admin.html">+ Add a recipe</a></p>' +
+        (remote
+          ? "<p>This journal is connected to a database, so saving publishes straight away — the recipe " +
+            "is live for everyone, on every device.</p>"
+          : "<p>Recipes you add are saved <strong>in this browser</strong> and show up in the journal on this " +
+            "device immediately. To publish them to the real website, press <strong>Export recipes.js</strong> " +
+            "in the writing desk, drop the file into <code>data/</code>, put the media files where the " +
+            "on-screen list says, and commit.</p>" +
+            "<p>If that export step gets tedious — or once Mom&rsquo;s videos start piling up — connect a " +
+            "database and it disappears: see <code>docs/database-setup.md</code>. Ten minutes, free.</p>") +
+        '<hr class="rule">' +
+        "<h2>Or edit the file by hand</h2>" +
+        "<p>The recipes are just a list in <code>data/recipes.js</code>. Copy this block, paste it in, change the words:</p>" +
         "<pre><code>" + esc(TEMPLATE_SNIPPET) + "</code></pre>" +
-        "<h2>3. Field guide</h2>" +
+        "<h2>Field guide</h2>" +
         "<ul>" +
           "<li><code>category</code> — one of <code>breakfast</code>, <code>lunch</code>, <code>dinner</code>, <code>treats</code></li>" +
           "<li><code>rating</code> — 0 to 5 stars &nbsp;·&nbsp; <code>difficulty</code> — 1 to 5 dots</li>" +
-          "<li><code>portions</code> — the number the recipe makes; the site can scale the ingredients up or down from it</li>" +
+          "<li><code>portions</code> — the number the recipe makes; the site can scale the ingredients from it</li>" +
           "<li><code>prep</code> / <code>cook</code> — <code>{ hrs: 0, mins: 30 }</code></li>" +
           "<li><code>ingredients</code> — one line each, starting with the amount so it can be scaled</li>" +
           "<li><code>method</code> — one line per step</li>" +
           "<li><code>hints</code>, <code>goesWith</code>, <code>notes</code> — free text, exactly like the boxes in her notebook</li>" +
           "<li><code>media</code> — the videos, voice notes and photos for this recipe</li>" +
         "</ul>" +
-        "<p>Full instructions also live in <code>README.md</code> and <code>docs/adding-a-recipe.md</code> in the repository.</p>" +
+        "<p>Full instructions live in <code>README.md</code> and <code>docs/adding-a-recipe.md</code>.</p>" +
       "</div>";
   }
 

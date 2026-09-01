@@ -27,6 +27,24 @@ window.MRJStore = (function () {
     return h;
   }
 
+  /* ---------------- files kept in this browser ----------------
+     A src of "drawer:aloo/photo.jpg" means the file lives in
+     IndexedDB. Blob URLs are built once at boot so that the
+     rendering code can stay synchronous. */
+
+  var blobUrls = {};
+
+  function primeBlobUrls() {
+    if (!window.MRJDrawer || !MRJDrawer.supported()) return Promise.resolve();
+    return MRJDrawer.allFiles().then(function (rows) {
+      Object.keys(blobUrls).forEach(function (k) { URL.revokeObjectURL(blobUrls[k]); });
+      blobUrls = {};
+      rows.forEach(function (row) {
+        try { blobUrls["drawer:" + row.path] = URL.createObjectURL(row.blob); } catch (e) {}
+      });
+    }).catch(function () {});
+  }
+
   /* ---------------- media URLs ----------------
      A media `src` can be any of three things:
        "https://…"            → used exactly as given (YouTube, any CDN)
@@ -36,6 +54,7 @@ window.MRJStore = (function () {
   function mediaUrl(src) {
     src = String(src || "");
     if (!src) return "";
+    if (src.indexOf("drawer:") === 0) return blobUrls[src] || "";
     if (/^(https?:)?\/\//i.test(src) || src.indexOf("data:") === 0) return src;
     if (src.indexOf("media/") === 0 || src.indexOf("./") === 0) return src;
     if (!configured()) return src;
@@ -125,7 +144,13 @@ window.MRJStore = (function () {
       if (CFG.source === "supabase") {
         console.warn("[journal] source is \"supabase\" but url/anonKey are empty in config.js — falling back to data/recipes.js");
       }
-      return Promise.resolve((window.RECIPES || []).slice());
+      // File mode: what's committed in data/recipes.js, plus anything
+      // added from the + Add button and kept in this browser.
+      return primeBlobUrls().then(function () {
+        return window.MRJDrawer ? MRJDrawer.allRecipes() : [];
+      }).then(function (drafts) {
+        return mergeDrafts((window.RECIPES || []).slice(), drafts);
+      });
     }
 
     var cached = readCache();
@@ -148,6 +173,50 @@ window.MRJStore = (function () {
       if (opts.onError) opts.onError(err);
       return (window.RECIPES || []).slice();   // last resort: whatever is in the repo
     });
+  }
+
+  /* A browser copy of a recipe wins over the committed one with the
+     same id, so editing a file-mode recipe from the form works. */
+  function mergeDrafts(fileRecipes, drafts) {
+    var byId = {};
+    fileRecipes.forEach(function (r) { byId[r.id] = r; });
+    (drafts || []).forEach(function (r) { r._draft = true; byId[r.id] = r; });
+    return Object.keys(byId).map(function (k) { return byId[k]; });
+  }
+
+  /* ---------------- writing in file mode ---------------- */
+
+  function saveLocal(recipe) {
+    if (!window.MRJDrawer) return Promise.reject(new Error("Local storage is unavailable in this browser."));
+    return MRJDrawer.putRecipe(recipe);
+  }
+
+  function deleteLocal(id) {
+    if (!window.MRJDrawer) return Promise.reject(new Error("Local storage is unavailable in this browser."));
+    return MRJDrawer.removeRecipe(id);
+  }
+
+  /* Keeps the file in the browser and hands back the src to store. */
+  function stashFile(path, file, onProgress) {
+    if (!window.MRJDrawer) return Promise.reject(new Error("Local storage is unavailable in this browser."));
+    if (onProgress) onProgress(100);
+    return MRJDrawer.putFile(path, file).then(function () {
+      try { blobUrls["drawer:" + path] = URL.createObjectURL(file); } catch (e) {}
+      return "drawer:" + path;
+    });
+  }
+
+  /* One call that does the right thing for whichever mode is on. */
+  function save(recipe) {
+    return configured() ? saveRecipe(recipe) : saveLocal(recipe);
+  }
+
+  function remove(id) {
+    return configured() ? deleteRecipe(id) : deleteLocal(id);
+  }
+
+  function addFile(path, file, onProgress) {
+    return configured() ? uploadFile(path, file, onProgress) : stashFile(path, file, onProgress);
   }
 
   /* ---------------- auth (used by admin.html) ---------------- */
@@ -244,6 +313,12 @@ window.MRJStore = (function () {
   return {
     source: CFG.source,
     configured: configured,
+    save: save,
+    remove: remove,
+    addFile: addFile,
+    saveLocal: saveLocal,
+    deleteLocal: deleteLocal,
+    primeBlobUrls: primeBlobUrls,
     load: load,
     mediaUrl: mediaUrl,
     fromRow: fromRow,

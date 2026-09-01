@@ -42,6 +42,9 @@ html[data-theme="dark"]{
 
 *,*::before,*::after{box-sizing:border-box}
 
+/* the hidden attribute must beat any display: rule a class sets */
+[hidden]{display:none !important}
+
 body{
   margin:0;
   background:var(--paper);
@@ -484,4 +487,26 @@ h2{font-family:var(--serif);font-size:1.5rem;font-weight:600;margin:0 0 .75rem}
 @media (max-width:700px){
   .form-grid{grid-template-columns:1fr}
   .media-rows .src{max-width:100%}
+}
+
+/* the + Add recipe button and the file-mode notices */
+.add-btn{white-space:nowrap;font-size:.8rem;padding:.5rem .9rem}
+.section-head{display:flex;align-items:center;justify-content:space-between;gap:1rem;flex-wrap:wrap;margin-bottom:.75rem}
+.section-head h2{margin:0}
+
+.banner{
+  border:1px solid var(--rule);border-left:3px solid var(--accent);
+  background:var(--paper-2);border-radius:10px;padding:1rem 1.25rem;margin-bottom:1.5rem;
+}
+.banner p{margin:0;font-size:.9rem;color:var(--ink-2)}
+
+.tag{
+  font-size:.62rem;letter-spacing:.12em;text-transform:uppercase;
+  border:1px solid var(--accent);color:var(--accent);
+  border-radius:999px;padding:.05rem .45rem;vertical-align:middle;white-space:nowrap;
+}
+.tag.muted{border-color:var(--rule);color:var(--ink-3)}
+
+@media (max-width:900px){
+  .add-btn{padding:.45rem .75rem}
 }

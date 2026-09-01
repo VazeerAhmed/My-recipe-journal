@@ -28,7 +28,7 @@ The journal runs in one of two modes — one line in `config.js` decides which.
 |---|---|---|
 | Recipes | `data/recipes.js`, committed to git | Postgres table |
 | Media | `media/`, committed to git | Supabase Storage |
-| Adding a recipe | edit the file, commit, push | fill in a form at `admin.html` |
+| Adding a recipe | + Add button → export → commit | + Add button, and that's it |
 | Good for | getting started, a few photos | real video and voice notes |
 | Setup | none | ~10 minutes, free |
 
@@ -46,9 +46,9 @@ straight from a static site. For any video longer than a couple of minutes, uplo
 
 ### The writing desk
 
-In database mode, `admin.html` is where recipes get added: sign in, fill in the form, drop the
-photos, videos and voice notes in, save. No files to edit, nothing to commit. Reading the journal
-needs no login; changing it does.
+`admin.html` is where recipes get added, in **either** mode — the **+ Add recipe** button goes
+straight there. In file mode it needs no sign-in and saves into your browser. In database mode it
+asks you to sign in and saves online; reading the journal never needs a login, changing it does.
 
 ## Running it
 
@@ -66,9 +66,23 @@ To put it online for the family, turn on **GitHub Pages** for this repository
 
 ## Adding a recipe
 
-**In database mode:** open `admin.html` and use the form. That's the whole answer.
+**Press "+ Add recipe".** It's in the header of every page, and on the home page.
+That opens the writing desk: fill in the form, drop her photos, videos and voice notes in, save.
+It works immediately, with no setup and no sign-in — nothing to install, no file to edit.
 
-**In file mode:** everything lives in one file, **`data/recipes.js`**. There's a copy-paste template at
+Where it saves depends on the mode:
+
+- **File mode (default):** saved in your browser, and the recipe appears in the journal on
+  *this device* right away. When you want it on the real website, press **Export recipes.js**,
+  drop that file into `data/`, put the media files where the on-screen list says, and commit.
+- **Database mode:** saved online instantly and visible to everyone, on every device. No export step.
+
+If the exporting gets tedious, that's the signal to spend ten minutes on
+[`docs/database-setup.md`](docs/database-setup.md).
+
+### Editing the file by hand
+
+Still perfectly possible — the recipes are just a list in **`data/recipes.js`**. There's a copy-paste template at
 the top of that file, and the same guide is in [`docs/adding-a-recipe.md`](docs/adding-a-recipe.md)
 and on the site itself under *How to add a recipe*.
 
@@ -115,6 +129,7 @@ config.js                ← file mode or database mode. One line.
 assets/css/style.css     the paper-and-ink styling
 assets/js/app.js         rendering, search, filters, media players, lightbox
 assets/js/store.js       the data layer — file mode and Supabase, plain fetch()
+assets/js/browser-db.js  IndexedDB, so the + Add button works with no setup
 assets/js/admin.js       the recipe form and the uploader
 data/recipes.js          the recipes in file mode
 db/schema.sql            the table, the media bucket and the access rules

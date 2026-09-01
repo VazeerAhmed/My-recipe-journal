@@ -63,17 +63,12 @@
 
   /* ---------------- screens ---------------- */
 
-  function screenNotConfigured() {
+  function screenNoStorage() {
     root.innerHTML =
-      '<div class="page-head"><p class="eyebrow">Not connected yet</p><h1>The writing desk needs a database</h1></div>' +
-      '<div class="prose">' +
-        "<p>Right now the journal is in <strong>file mode</strong> — recipes come from <code>data/recipes.js</code> " +
-        "and media from the <code>media/</code> folder, both committed to the repository. That works, but git is a " +
-        "poor place for video and voice notes.</p>" +
-        "<p>To use this page, follow <code>docs/database-setup.md</code> — it takes about ten minutes — then set " +
-        "<code>source: \"supabase\"</code> in <code>config.js</code> along with your project URL and anon key.</p>" +
-        '<p><a class="btn primary" href="index.html">← Back to the journal</a></p>' +
-      "</div>";
+      '<div class="page-head"><h1>This browser can&rsquo;t save recipes</h1></div>' +
+      '<div class="prose"><p>The form needs IndexedDB, which is switched off here — often the case in ' +
+      "private browsing. Try a normal window, or connect a database (see <code>docs/database-setup.md</code>) " +
+      "so recipes are saved online instead.</p></div>";
   }
 
   function screenSignIn() {
@@ -103,8 +98,10 @@
         var n = (r.media && r.media[k] || []).length;
         return n ? { videos: "🎬", audio: "🎙", images: "📷" }[k] + " " + n : "";
       }).filter(Boolean).join("  ");
+      var origin = MRJStore.configured() ? "" :
+        (r._draft ? ' <span class="tag">in this browser</span>' : ' <span class="tag muted">in data/recipes.js</span>');
       return '<tr>' +
-        "<td><strong>" + esc(r.title) + "</strong><br><small>" + esc(r.id) + "</small></td>" +
+        "<td><strong>" + esc(r.title) + "</strong>" + origin + "<br><small>" + esc(r.id) + "</small></td>" +
         "<td>" + esc(r.category) + "</td>" +
         "<td>" + esc(counts || "—") + "</td>" +
         "<td>" + esc(r.addedOn || "") + "</td>" +
@@ -115,15 +112,32 @@
     }).join("");
 
     var localCount = (window.RECIPES || []).length;
+    var remote = MRJStore.configured();
+    var drafts = recipes.filter(function (r) { return r._draft; }).length;
+
+    var banner = remote
+      ? ""
+      : '<div class="banner">' +
+          "<p><strong>Saved in this browser.</strong> Recipes you add here show up in the journal on " +
+          "<em>this device</em> straight away. To put them on the real website — and on Mom&rsquo;s phone — " +
+          'press <strong>Export</strong> and commit the file, or <a href="docs/database-setup.md">connect a database</a> ' +
+          "and skip the exporting forever.</p>" +
+        "</div>";
 
     root.innerHTML =
       '<div class="page-head">' +
         '<p class="eyebrow">The writing desk</p><h1>Recipes in the journal</h1>' +
-        '<p class="lede">' + recipes.length + " recipe" + (recipes.length === 1 ? "" : "s") + " in the database.</p>" +
+        '<p class="lede">' + recipes.length + " recipe" + (recipes.length === 1 ? "" : "s") +
+          (remote ? " in the database." : " — " + drafts + " added here, " + (recipes.length - drafts) + " from data/recipes.js.") +
+        "</p>" +
       "</div>" +
+      banner +
       '<div class="admin-actions">' +
         '<button class="btn primary" id="new-recipe">+ New recipe</button>' +
-        (localCount ? '<button class="btn" id="import-local">Import the ' + localCount + " from data/recipes.js</button>" : "") +
+        (remote
+          ? (localCount ? '<button class="btn" id="import-local">Import the ' + localCount + " from data/recipes.js</button>" : "")
+          : '<button class="btn" id="export-recipes">⇩ Export recipes.js</button>' +
+            '<button class="btn" id="export-media">⇩ Export media files</button>') +
         '<a class="btn" href="index.html">View the journal</a>' +
       "</div>" +
       (recipes.length
@@ -140,6 +154,18 @@
     var imp = document.getElementById("import-local");
     if (imp) imp.addEventListener("click", importLocal);
 
+    var exR = document.getElementById("export-recipes");
+    if (exR) exR.addEventListener("click", exportRecipes);
+
+    var exM = document.getElementById("export-media");
+    if (exM) exM.addEventListener("click", exportMedia);
+
+    if (!MRJStore.configured() && window.MRJDrawer) {
+      mediaManifest().then(function (html) {
+        if (html) root.insertAdjacentHTML("beforeend", html);
+      });
+    }
+
     root.addEventListener("click", function (e) {
       var edit = e.target.getAttribute && e.target.getAttribute("data-edit");
       var del = e.target.getAttribute && e.target.getAttribute("data-del");
@@ -148,7 +174,7 @@
         screenEditor();
       } else if (del) {
         if (!confirm("Delete “" + del + "” from the journal? The uploaded photos and videos stay in storage.")) return;
-        MRJStore.deleteRecipe(del).then(function () {
+        MRJStore.remove(del).then(function () {
           toast("Deleted.");
           refresh();
         }).catch(function (ex) { toast(ex.message, "bad"); });
@@ -311,9 +337,11 @@
       var path = id + "/" + name;
 
       fill.style.width = "0%";
-      MRJStore.uploadFile(path, file, function (pct) { fill.style.width = pct + "%"; })
-        .then(function () {
-          draft.media[kind].push({ src: path, caption: "" });
+      // The store decides what the src should be: an object path in the
+      // bucket, or a "drawer:" reference to a file kept in this browser.
+      MRJStore.addFile(path, file, function (pct) { fill.style.width = pct + "%"; })
+        .then(function (src) {
+          draft.media[kind].push({ src: src || path, caption: "" });
           redrawMedia(kind);
           next();
         })
@@ -357,7 +385,7 @@
     var btn = e.target.querySelector('button[type="submit"]');
     btn.disabled = true; btn.textContent = "Saving…";
 
-    MRJStore.saveRecipe(draft)
+    MRJStore.save(draft)
       .then(function () {
         toast("Saved to the journal.");
         draft = null;
@@ -367,6 +395,86 @@
         toast(ex.message, "bad");
         btn.disabled = false; btn.textContent = "Save to the journal";
       });
+  }
+
+  /* ---------------- export (file mode) ----------------
+     Turns everything — the committed recipes plus whatever you added
+     from the + Add button — back into a data/recipes.js you can commit,
+     with the browser-held media rewritten to media/… paths. */
+
+  var MEDIA_FOLDER = { images: "media/images", videos: "media/videos", audio: "media/audio" };
+
+  function download(blob, filename) {
+    var a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    setTimeout(function () { URL.revokeObjectURL(a.href); a.remove(); }, 1000);
+  }
+
+  function forExport(r) {
+    var out = JSON.parse(JSON.stringify(r));
+    delete out._draft;
+    ["images", "videos", "audio"].forEach(function (kind) {
+      out.media = out.media || {};
+      out.media[kind] = (out.media[kind] || []).map(function (m) {
+        var src = m.src || m;
+        if (String(src).indexOf("drawer:") === 0) {
+          src = MEDIA_FOLDER[kind] + "/" + String(src).split("/").pop();
+        }
+        return { src: src, caption: (m && m.caption) || "" };
+      });
+    });
+    return out;
+  }
+
+  function exportRecipes() {
+    MRJStore.load().then(function (list) {
+      var body = list.map(forExport);
+      var header =
+        "/* ============================================================\n" +
+        "   MOM'S RECIPE JOURNAL — the recipe book itself.\n\n" +
+        "   Exported from the writing desk on " + new Date().toISOString().slice(0, 10) + ".\n" +
+        "   Drop this file in as data/recipes.js and commit it.\n" +
+        "   ============================================================ */\n\n";
+      download(new Blob([header + "window.RECIPES = " + JSON.stringify(body, null, 2) + ";\n"],
+        { type: "application/javascript" }), "recipes.js");
+      toast("Downloaded recipes.js — put it in the data/ folder and commit.");
+    });
+  }
+
+  function exportMedia() {
+    MRJDrawer.allFiles().then(function (rows) {
+      if (!rows.length) { toast("No media held in this browser."); return; }
+      rows.forEach(function (row, i) {
+        // Use the stored (cleaned) name — that is what the exported
+        // recipes.js points at, so the two must agree.
+        setTimeout(function () { download(row.blob, row.path.split("/").pop()); }, i * 400);
+      });
+      toast("Downloading " + rows.length + " file(s) — see the list for where each one goes.");
+    });
+  }
+
+  function mediaManifest() {
+    return MRJDrawer.allFiles().then(function (rows) {
+      if (!rows.length) return "";
+      var where = {};
+      recipes.forEach(function (r) {
+        ["images", "videos", "audio"].forEach(function (kind) {
+          (r.media && r.media[kind] || []).forEach(function (m) {
+            var src = m.src || m;
+            if (String(src).indexOf("drawer:") === 0) where[String(src).split("/").pop()] = MEDIA_FOLDER[kind];
+          });
+        });
+      });
+      return '<div class="sheet"><h2>Where the media files go</h2>' +
+        '<table class="admin-table"><thead><tr><th>File</th><th>Put it in</th></tr></thead><tbody>' +
+        rows.map(function (row) {
+          var name = row.path.split("/").pop();
+          return "<tr><td>" + esc(name) + "</td><td><code>" + esc(where[name] || "media") + "/</code></td></tr>";
+        }).join("") + "</tbody></table></div>";
+    });
   }
 
   /* ---------------- import the file-mode recipes ---------------- */
@@ -385,7 +493,7 @@
         refresh();
         return;
       }
-      MRJStore.saveRecipe(list.shift())
+      MRJStore.save(list.shift())
         .then(function () { done++; step(); })
         .catch(function (ex) { failed++; console.error(ex); step(); });
     })();
@@ -401,12 +509,17 @@
   }
 
   function start() {
-    if (!MRJStore.configured()) { screenNotConfigured(); return; }
-
-    if (!MRJStore.token()) { screenSignIn(); whoEl.textContent = ""; signoutBtn.hidden = true; return; }
-
-    whoEl.textContent = MRJStore.currentEmail();
-    signoutBtn.hidden = false;
+    if (MRJStore.configured()) {
+      if (!MRJStore.token()) { screenSignIn(); whoEl.textContent = ""; signoutBtn.hidden = true; return; }
+      whoEl.textContent = MRJStore.currentEmail();
+      signoutBtn.hidden = false;
+    } else {
+      // File mode: nothing to sign in to. Recipes are saved in this browser
+      // and exported to data/recipes.js when you're ready to share them.
+      whoEl.textContent = "saved in this browser";
+      signoutBtn.hidden = true;
+      if (!window.MRJDrawer || !MRJDrawer.supported()) { screenNoStorage(); return; }
+    }
 
     root.innerHTML = '<div class="empty"><span class="big">🍵</span>Opening the journal…</div>';
     refresh().catch(function (ex) {

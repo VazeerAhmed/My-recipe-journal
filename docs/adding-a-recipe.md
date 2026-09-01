@@ -1,5 +1,29 @@
 # Adding a recipe
 
+## The easy way: press "+ Add recipe"
+
+The button is in the header of every page. It opens a form — recipe name, rating, difficulty,
+portions, ingredients, method, the two notebook boxes — with drop zones for her photos, videos and
+voice notes. Fill it in and press **Save**. No setup, no sign-in, no files.
+
+In **file mode** the recipe is saved in your browser and appears in the journal on that device
+straight away. To publish it to the real website:
+
+1. Press **⇩ Export recipes.js** and put the downloaded file in the `data/` folder.
+2. Press **⇩ Export media files** and put each file where the on-screen table says.
+3. Commit and push.
+
+In **database mode** there is no step 2 or 3 — saving publishes it. See
+[`database-setup.md`](database-setup.md).
+
+> Saved in your browser means *that* browser. Clearing site data will clear unexported recipes, and
+> they won't appear on your phone until you export and commit (or connect a database). Export as
+> soon as you've written something you'd hate to lose.
+
+---
+
+## The manual way
+
 Everything is one file: **`data/recipes.js`**. You never touch the HTML, CSS or JavaScript.
 
 ---
